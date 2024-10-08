@@ -1,8 +1,3 @@
-import os
-import cv2
-import numpy as np
-
-
 class Loader:
     def __init__(self, base_path, size=(224, 224)):
         self.base_path = base_path
@@ -12,9 +7,12 @@ class Loader:
         self.classes = {}
 
     def load_data(self):
+        import os
+        import cv2
+        import numpy as np
+
         class_id = 0
 
-        # Recorremos las subcarpetas dentro de la carpeta principal
         for folder_name in os.listdir(self.base_path):
             folder_path = os.path.join(self.base_path, folder_name)
 
@@ -39,9 +37,7 @@ class Loader:
                     except Exception as e:
                         print(f"Could not open {image_path}: {e}")
 
-                # Imprimir cuántas imágenes se encontraron para cada clase
                 print(f"Class '{folder_name}' (ID: {class_id}): {image_count} images")
                 class_id += 1
 
-        # Convertimos las listas a arrays de NumPy para su uso en modelos de deep learning
         return np.array(self.X), np.array(self.Y), self.classes
