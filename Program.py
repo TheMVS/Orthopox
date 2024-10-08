@@ -1,17 +1,23 @@
+import Config
 from Loader import Loader
 
 
 def main():
-    ruta_base = "./Data"
+    ruta_base = Config.BASE_PATH
     loader = Loader(ruta_base)
 
     X, Y, classes = loader.load_data()
 
-    X, Y, classes = loader.data_augmentation(X, Y)
+    if Config.DATA_AUGMENTATION:
+        X, Y, classes = loader.data_augmentation(X, Y, prob_flip_horizontal=Config.PROB_FLIP_HORIZONTAL,
+                                                 prob_flip_vertical=Config.PROB_FLIP_VERTICAL,
+                                                 prob_blur=Config.PROB_BLUR,
+                                                 blur_size=Config.BLUR_SIZE)
 
-    print(f"Loaded Images: {len(X)}")
-    print(f"Loaded Labels: {len(Y)}")
-    print(f"Class dicctionay: {classes}")
+    print(f"Total Loaded Images: {len(X)}")
+    print(f"Total Loaded Labels: {len(Y)}")
+    print(f"Class dictionay: {classes}")
+
 
 if __name__ == "__main__":
     main()
