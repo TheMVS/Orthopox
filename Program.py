@@ -7,6 +7,8 @@ def main():
 
     X, Y, classes = loader.load_data()
 
+    X, Y, classes = loader.data_augmentation(X, Y)
+
     print(f"Loaded Images: {len(X)}")
     print(f"Loaded Labels: {len(Y)}")
     print(f"Class dicctionay: {classes}")

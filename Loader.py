@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 class Loader:
     def __init__(self, base_path, size=(224, 224)):
         self.base_path = base_path
@@ -8,8 +10,6 @@ class Loader:
 
     def load_data(self):
         import os
-        import cv2
-        import numpy as np
 
         class_id = 0
 
@@ -41,3 +41,24 @@ class Loader:
                 class_id += 1
 
         return np.array(self.X), np.array(self.Y), self.classes
+
+    def data_augmentation(self, X, Y, prob_flip_horizontal=0.5, prob_flip_vertical=0.5, prob_blur=0.5,
+                          blur_size=5):
+        from random import random
+        X_aug = list(X)
+        Y_aug = list(Y)
+
+        for i, image in enumerate(X):
+            if random() < prob_flip_horizontal:
+                image = cv2.flip(image, 1)  # Flip horizontal
+
+            if random() < prob_flip_vertical:
+                image = cv2.flip(image, 0)  # Flip vertical
+
+            if random() < prob_blur:
+                image = cv2.GaussianBlur(image, (blur_size, blur_size), 0)  # Gaussian Blur
+
+            X_aug.append(image)
+            Y_aug.append(Y[i])
+
+        return np.array(X_aug), np.array(Y_aug), self.classes
