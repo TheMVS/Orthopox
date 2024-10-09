@@ -16,7 +16,7 @@ def main():
                                                  blur_size=Config.BLUR_SIZE)
 
     kerasLoader = KerasLoader()
-    model = kerasLoader.load_freeze_and_modify_model(name="ResNet50", num_layers_to_remove=1) # 23,587,712
+    model = kerasLoader.load_freeze_and_modify_model(name="ResNet50V2", num_layers_to_remove=0) # 23,587,712
     model.summary()
 
     #from keras.applications import ResNet50
@@ -25,7 +25,7 @@ def main():
 
     print(f"Total Loaded Images: {len(X)}")
     print(f"Total Loaded Labels: {len(Y)}")
-    print(f"Class dictionay: {classes}")
+    print(f"Class dictionary: {classes}")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from keras import Model
-from keras.applications import VGG16, ResNet50, InceptionV3, MobileNetV2
+from keras.applications import VGG16, ResNet50, InceptionV3, MobileNetV2, ResNet50V2
 
 class KerasLoader:
     def __init__(self, model_name="ResNet50", input_shape=(224, 224, 3)):
@@ -10,7 +10,8 @@ class KerasLoader:
             'VGG16': VGG16,
             'ResNet50': ResNet50,
             'InceptionV3': InceptionV3,
-            'MobileNetV2': MobileNetV2
+            'MobileNetV2': MobileNetV2,
+            'ResNet50V2': ResNet50V2
         }
 
     def load_model(self, name):
