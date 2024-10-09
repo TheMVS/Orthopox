@@ -1,6 +1,12 @@
 SEED = 42
 
 BASE_PATH = "./Data"
+DATA_SUMMARY_FILE = 'data_summary.txt'
+RANDOMSEARCH_FILE = 'random_search_results.xlsx'
+RESULTS_FILE = 'evaluation_results.csv'
+STATS_FILE = 'custom_significance_results.csv'
+
+IMAGE_SIZE= (224, 224, 3)
 
 DATA_AUGMENTATION = False
 PROB_FLIP_HORIZONTAL = 0.0
@@ -11,6 +17,15 @@ BLUR_SIZE = 5
 NETWORK = "ResNet50"
 LAYERS = 3
 
-RANDOM_SEARCH = True
+SKMODEL_NAME = 'LogisticRegression'
+SKMODEL_PARAMS = {'clf_solver': 'saga', 'clf_C': 10}
 
+RANDOM_SEARCH = True
+RANDOM_SEARCH_ITERATIONS = 5
+
+VALIDATION_TYPE = 'cross_validation'
+# CV
+SPLITS = 10
+# HoldOut
 TEST_SIZE = 0.1
+REPEATS = 50

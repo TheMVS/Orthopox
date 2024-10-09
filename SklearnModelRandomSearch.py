@@ -1,14 +1,17 @@
+import os
 import pandas as pd
+from openpyxl import load_workbook
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.metrics import make_scorer, cohen_kappa_score, f1_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from scipy.stats import randint, uniform, expon
 
 from SklearnLoader import SklearnLoader
 
 
 class SklearnModelRandomSearch:
-    def __init__(self, X, Y, models_params=None, n_iter=2, cv=10, test_size=0.1, random_state=42):
+    def __init__(self, X, Y, n_iter=2, cv=10, test_size=0.1, random_state=42):
         self.X = X
         self.Y = Y
         self.n_iter = n_iter
@@ -16,25 +19,25 @@ class SklearnModelRandomSearch:
         self.test_size = test_size
         self.random_state = random_state
 
-        # Default models and hyperparameters with class_weight balanced for those that support it
-        self.models_params = models_params if models_params else {
+        # Define statistical distributions for model hyperparameters
+        self.models_params = {
             'RandomForest': {
-                'clf__n_estimators': [50, 100, 150],
-                'clf__max_depth': [5, 10, 15],
-                'clf__min_samples_split': [2, 5, 10],
-                'clf__min_samples_leaf': [1, 2, 4],
-                'clf__class_weight': ['balanced']  # Class weights balanced
+                'clf__n_estimators': randint(50, 200),  # Random integers between 50 and 200
+                'clf__max_depth': randint(5, 20),  # Random integers between 5 and 20
+                'clf__min_samples_split': randint(2, 10),  # Random integers between 2 and 10
+                'clf__min_samples_leaf': randint(1, 5),  # Random integers between 1 and 5
+                'clf__class_weight': ['balanced']  # Fixed class weight
             },
             'SVM': {
-                'clf__C': [0.1, 1, 10, 100],
-                'clf__kernel': ['linear', 'rbf', 'poly'],
-                'clf__gamma': ['scale', 'auto'],
-                'clf__class_weight': ['balanced']  # Class weights balanced
+                'clf__C': expon(scale=1),  # Exponential distribution for regularization parameter C
+                'clf__kernel': ['linear', 'rbf', 'poly'],  # Kernel types fixed
+                'clf__gamma': ['scale', 'auto'],  # Fixed gamma options
+                'clf__class_weight': ['balanced']  # Fixed class weight
             },
             'LogisticRegression': {
-                'clf__C': [0.01, 0.1, 1, 10, 100],
-                'clf__solver': ['liblinear', 'lbfgs', 'saga'],
-                'clf__class_weight': ['balanced']  # Class weights balanced
+                'clf__C': uniform(0.01, 10),  # Uniform distribution between 0.01 and 10 for C
+                'clf__solver': ['liblinear', 'lbfgs', 'saga'],  # Solver options
+                'clf__class_weight': ['balanced']  # Fixed class weight
             }
         }
         self.results = []
@@ -49,9 +52,18 @@ class SklearnModelRandomSearch:
     def _save_partial_results_to_excel(self, results, filename):
         df = pd.DataFrame(results)
 
-        # Append results to the Excel file incrementally
-        with pd.ExcelWriter(filename, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
-            df.to_excel(writer, index=False, header=writer.sheets == {})
+        # Check if the file exists and load previous data if it does
+        if os.path.exists(filename):
+            # Load the workbook to find the last row
+            with pd.ExcelWriter(filename, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                workbook = load_workbook(filename)
+                sheet = workbook.active
+                startrow = sheet.max_row
+                df.to_excel(writer, index=False, header=False, startrow=startrow)
+        else:
+            # If file doesn't exist, create it with headers
+            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, header=True)
 
     def perform_search(self, filename='random_search_results.xlsx'):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.Y, test_size=self.test_size,
@@ -73,7 +85,6 @@ class SklearnModelRandomSearch:
             search.fit(X_train, y_train)
 
             model_results = []
-            # Get n_iter best models and their parameters
             for rank in range(self.n_iter):
                 best_model = search.cv_results_['params'][rank]
                 mean_test_score = search.cv_results_['mean_test_score'][rank]
