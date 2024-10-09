@@ -1,5 +1,8 @@
 import cv2
 import numpy as np
+from keras.src.applications.convnext import preprocess_input
+
+
 class Loader:
     def __init__(self, base_path, size=(224, 224)):
         self.base_path = base_path
@@ -62,3 +65,6 @@ class Loader:
             Y_aug.append(Y[i])
 
         return np.array(X_aug), np.array(Y_aug), self.classes
+
+    def image_to_model_features(self, X, model):
+        return model.predict(X)
