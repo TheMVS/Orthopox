@@ -26,18 +26,34 @@ class SklearnModelRandomSearch:
                 'clf__max_depth': randint(5, 20),  # Random integers between 5 and 20
                 'clf__min_samples_split': randint(2, 10),  # Random integers between 2 and 10
                 'clf__min_samples_leaf': randint(1, 5),  # Random integers between 1 and 5
-                'clf__class_weight': ['balanced']  # Fixed class weight
+                'clf__class_weight': [None, 'balanced']  # Testing only None and 'balanced'
             },
             'SVM': {
-                'clf__C': expon(scale=1),  # Exponential distribution for regularization parameter C
+                'clf__C': expon(scale=100),  # Exponential distribution for regularization parameter C
                 'clf__kernel': ['linear', 'rbf', 'poly'],  # Kernel types fixed
                 'clf__gamma': ['scale', 'auto'],  # Fixed gamma options
-                'clf__class_weight': ['balanced']  # Fixed class weight
+                'clf__class_weight': [None, 'balanced']  # None and 'balanced' class weights
             },
             'LogisticRegression': {
                 'clf__C': uniform(0.01, 10),  # Uniform distribution between 0.01 and 10 for C
                 'clf__solver': ['liblinear', 'lbfgs', 'saga'],  # Solver options
-                'clf__class_weight': ['balanced']  # Fixed class weight
+                'clf__class_weight': [None, 'balanced']  # Fixed class weight
+            },
+            'GradientBoosting': {
+                'clf__n_estimators': randint(50, 200),  # Random integers between 50 and 200
+                'clf__learning_rate': uniform(0.01, 0.3),  # Learning rate between 0.01 and 0.3
+                'clf__max_depth': randint(3, 10)  # Max depth between 3 and 10
+            },
+            'DecisionTree': {
+                'clf__max_depth': randint(5, 20),  # Random integers between 5 and 20
+                'clf__min_samples_split': randint(2, 10),  # Random integers between 2 and 10
+                'clf__min_samples_leaf': randint(1, 5),  # Random integers between 1 and 5
+                'clf__class_weight': [None, 'balanced']  # Fixed class weight
+            },
+            'KNN': {
+                'clf__n_neighbors': randint(1, 30),  # Random integers between 1 and 30
+                'clf__weights': ['uniform', 'distance'],  # Fixed weight options
+                'clf__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute']  # Fixed algorithm options
             }
         }
         self.results = []
