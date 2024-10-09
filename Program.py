@@ -19,7 +19,12 @@ def main():
     model = kerasLoader.load_freeze_and_modify_model(name=Config.NETWORK, num_layers_to_remove=Config.LAYERS)
     model.summary()
 
+    new_X = loader.image_to_model_features(X, model)
 
+    if Config.RANDOM_SEARCH:
+        from SklearnModelRandomSearch import SklearnModelRandomSearch
+        searcher = SklearnModelRandomSearch(X=new_X, Y=Y, test_size=Config.TEST_SIZE, random_state=Config.SEED)
+        searcher.run_search_and_save()
 
     print(f"Total Loaded Images: {len(X)}")
     print(f"Total Loaded Labels: {len(Y)}")

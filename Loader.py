@@ -67,4 +67,6 @@ class Loader:
         return np.array(X_aug), np.array(Y_aug), self.classes
 
     def image_to_model_features(self, X, model):
-        return model.predict(X)
+        predictions = model.predict(X)
+        flat_predictions = predictions.reshape((predictions.shape[0], -1))
+        return flat_predictions

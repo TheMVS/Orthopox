@@ -1,3 +1,5 @@
+SEED = 42
+
 BASE_PATH = "./Data"
 
 DATA_AUGMENTATION = False
@@ -8,3 +10,7 @@ BLUR_SIZE = 5
 
 NETWORK = "ResNet50"
 LAYERS = 3
+
+RANDOM_SEARCH = True
+
+TEST_SIZE = 0.1
