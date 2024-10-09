@@ -111,8 +111,8 @@ class SklearnModelRandomSearch:
                 model_results.append({
                     'model': model_name,
                     'rank': rank + 1,
-                    'mean_test_score': mean_test_score,
-                    'std_test_score': std_test_score,
+                    'mean_test_score_cv': mean_test_score,
+                    'std_test_score_cv': std_test_score,
                     'best_params': best_model,
                     'kappa': kappa,
                     'f1_score': f1

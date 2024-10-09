@@ -21,7 +21,7 @@ SKMODEL_NAME = 'LogisticRegression'
 SKMODEL_PARAMS = {'clf_solver': 'saga', 'clf_C': 10}
 
 RANDOM_SEARCH = True
-RANDOM_SEARCH_ITERATIONS = 5
+RANDOM_SEARCH_ITERATIONS = 50
 
 VALIDATION_TYPE = 'cross_validation'
 # CV
