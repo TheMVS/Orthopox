@@ -3,6 +3,10 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier
+from sklearn.neural_network import MLPClassifier
+
 
 class SklearnLoader:
     def __init__(self, model_name='RandomForest', model_params=None):
@@ -17,7 +21,11 @@ class SklearnLoader:
             'LogisticRegression': LogisticRegression,
             'GradientBoosting': GradientBoostingClassifier,
             'DecisionTree': DecisionTreeClassifier,
-            'KNN': KNeighborsClassifier
+            'KNN': KNeighborsClassifier,
+            'AdaBoost': AdaBoostClassifier,
+            'ExtraTrees': ExtraTreesClassifier,
+            'MLP': MLPClassifier,
+            'GaussianNB': GaussianNB
         }
 
         if self.model_name not in model_dict:

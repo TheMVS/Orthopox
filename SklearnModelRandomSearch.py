@@ -22,38 +22,86 @@ class SklearnModelRandomSearch:
         # Define statistical distributions for model hyperparameters
         self.models_params = {
             'RandomForest': {
-                'clf__n_estimators': randint(50, 200),  # Random integers between 50 and 200
-                'clf__max_depth': randint(5, 20),  # Random integers between 5 and 20
-                'clf__min_samples_split': randint(2, 10),  # Random integers between 2 and 10
-                'clf__min_samples_leaf': randint(1, 5),  # Random integers between 1 and 5
-                'clf__class_weight': [None, 'balanced']  # Testing only None and 'balanced'
+                'clf__n_estimators': randint(50, 500),  # Más rango para n_estimators
+                'clf__max_depth': randint(5, 50),  # Más rango para max_depth
+                'clf__min_samples_split': randint(2, 20),  # Mayor rango de min_samples_split
+                'clf__min_samples_leaf': randint(1, 10),  # Mayor rango de min_samples_leaf
+                'clf__max_features': ['auto', 'sqrt', 'log2', None],  # Añadido max_features
+                'clf__bootstrap': [True, False],  # Opciones para bootstrap
+                'clf__class_weight': [None, 'balanced', 'balanced_subsample']  # Añadido 'balanced_subsample'
             },
             'SVM': {
-                'clf__C': expon(scale=100),  # Exponential distribution for regularization parameter C
-                'clf__kernel': ['linear', 'rbf', 'poly'],  # Kernel types fixed
-                'clf__gamma': ['scale', 'auto'],  # Fixed gamma options
-                'clf__class_weight': [None, 'balanced']  # None and 'balanced' class weights
+                'clf__C': expon(scale=100),  # Mantiene la distribución exponencial para C
+                'clf__kernel': ['linear', 'rbf', 'poly', 'sigmoid'],  # Añadido kernel sigmoid
+                'clf__degree': randint(2, 5),  # Para kernel 'poly', variamos el grado
+                'clf__gamma': ['scale', 'auto'],  # Opciones de gamma
+                'clf__class_weight': [None, 'balanced']  # Mantiene las opciones de class_weight
             },
             'LogisticRegression': {
-                'clf__C': uniform(0.01, 10),  # Uniform distribution between 0.01 and 10 for C
-                'clf__solver': ['liblinear', 'lbfgs', 'saga'],  # Solver options
-                'clf__class_weight': [None, 'balanced']  # Fixed class weight
-            },
-            'GradientBoosting': {
-                'clf__n_estimators': randint(50, 200),  # Random integers between 50 and 200
-                'clf__learning_rate': uniform(0.01, 0.3),  # Learning rate between 0.01 and 0.3
-                'clf__max_depth': randint(3, 10)  # Max depth between 3 and 10
+                'clf__C': uniform(0.001, 500),  # Mayor rango para C
+                'clf__solver': ['liblinear', 'lbfgs', 'saga', 'newton-cg', 'newton-cholesky'],
+                # Corregido para evitar duplicados
+                'clf__penalty': ['l1', 'l2', 'elasticnet', None],  # Añadido elasticnet y None
+                'clf__class_weight': [None, 'balanced'],  # Mantiene las opciones de class_weight
+                'clf__max_iter': randint(100, 500)  # Añadido para iteraciones máximas
             },
             'DecisionTree': {
-                'clf__max_depth': randint(5, 20),  # Random integers between 5 and 20
-                'clf__min_samples_split': randint(2, 10),  # Random integers between 2 and 10
-                'clf__min_samples_leaf': randint(1, 5),  # Random integers between 1 and 5
-                'clf__class_weight': [None, 'balanced']  # Fixed class weight
+                'clf__criterion': ['gini', 'entropy', 'log_loss'],  # Variación en el criterio
+                'clf__splitter': ['best', 'random'],  # Añadido splitter
+                'clf__max_depth': randint(5, 50),  # Mayor rango para max_depth
+                'clf__min_samples_split': randint(2, 20),  # Mayor rango para min_samples_split
+                'clf__min_samples_leaf': randint(1, 10),  # Mayor rango para min_samples_leaf
+                'clf__class_weight': [None, 'balanced']  # Mantiene las opciones de class_weight
             },
-            'KNN': {
-                'clf__n_neighbors': randint(1, 30),  # Random integers between 1 and 30
-                'clf__weights': ['uniform', 'distance'],  # Fixed weight options
-                'clf__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute']  # Fixed algorithm options
+            'KNN': [
+                {
+                    'clf__n_neighbors': [1],  # Caso fijo para k=1
+                    'clf__weights': ['uniform', 'distance'],  # Mantiene las opciones de weights
+                    'clf__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Mantiene las opciones de algorithm
+                    'clf__leaf_size': randint(10, 50),  # Añadido leaf_size
+                    'clf__p': [1, 2]  # Distancia de Minkowski, p=1 (Manhattan) o p=2 (Euclidea)
+                },
+                {
+                    'clf__n_neighbors': randint(2, 50),  # Rango aleatorio para n_neighbors
+                    'clf__weights': ['uniform', 'distance'],  # Mantiene las opciones de weights
+                    'clf__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Mantiene las opciones de algorithm
+                    'clf__leaf_size': randint(10, 50),  # Añadido leaf_size
+                    'clf__p': [1, 2]  # Distancia de Minkowski, p=1 (Manhattan) o p=2 (Euclidea)
+                }
+            ],
+            'AdaBoost': {
+                'clf__n_estimators': randint(50, 500),  # Variación en el número de estimadores
+                'clf__learning_rate': uniform(0.01, 1),  # Variación en learning rate
+                'clf__algorithm': ['SAMME', 'SAMME.R']  # Opciones para algoritmo
+            },
+            'ExtraTrees': {
+                'clf__n_estimators': randint(50, 500),  # Variación en n_estimators
+                'clf__max_depth': randint(5, 50),  # Variación en max_depth
+                'clf__min_samples_split': randint(2, 20),  # Variación en min_samples_split
+                'clf__min_samples_leaf': randint(1, 10),  # Variación en min_samples_leaf
+                'clf__max_features': ['auto', 'sqrt', 'log2', None],  # Opciones para max_features
+                'clf__bootstrap': [True, False],  # Variación en bootstrap
+                'clf__class_weight': [None, 'balanced', 'balanced_subsample']  # Opciones para class_weight
+            },
+            'MLP': {
+                'clf__hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 100)],
+                # Variaciones en el tamaño de las capas
+                'clf__activation': ['identity', 'logistic', 'tanh', 'relu'],  # Opciones de activación
+                'clf__solver': ['lbfgs', 'sgd', 'adam'],  # Opciones de solver
+                'clf__alpha': uniform(0.0001, 0.1),  # Regularización L2
+                'clf__learning_rate': ['constant', 'invscaling', 'adaptive'],  # Opciones para learning_rate
+                'clf__max_iter': randint(200, 1000)  # Variación en el número máximo de iteraciones
+            },
+            'GaussianNB': {
+                'clf__var_smoothing': uniform(1e-9, 1e-7)  # Suavizado de varianza
+            },
+            'GradientBoosting': {
+                'clf__n_estimators': randint(10, 100),  # Reducción del rango de n_estimators para menos iteraciones
+                'clf__learning_rate': uniform(0.05, 0.3),  # Rango más acotado para el learning rate
+                'clf__max_depth': randint(2, 10),  # Reducción en el rango de max_depth para árboles más pequeños
+                'clf__subsample': uniform(0.6, 1),  # Subsample para entrenar con menos muestras, acelerando el proceso
+                'clf__min_samples_split': randint(2, 10),  # Rango menor para min_samples_split
+                'clf__min_samples_leaf': randint(1, 5)  # Rango menor para min_samples_leaf
             }
         }
         self.results = []
@@ -65,23 +113,31 @@ class SklearnModelRandomSearch:
         f1 = f1_score(y_test, y_pred, average='weighted')
         return kappa, f1
 
-    def _save_partial_results_to_excel(self, results, filename):
+    def _save_partial_results(self, results, filename, file_format):
         df = pd.DataFrame(results)
 
-        # Check if the file exists and load previous data if it does
-        if os.path.exists(filename):
-            # Load the workbook to find the last row
-            with pd.ExcelWriter(filename, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
-                workbook = load_workbook(filename)
-                sheet = workbook.active
-                startrow = sheet.max_row
-                df.to_excel(writer, index=False, header=False, startrow=startrow)
-        else:
-            # If file doesn't exist, create it with headers
-            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
-                df.to_excel(writer, index=False, header=True)
+        if file_format == 'excel':
+            # Check if the file exists and load previous data if it does
+            if os.path.exists(filename):
+                # Load the workbook to find the last row
+                with pd.ExcelWriter(filename, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                    workbook = load_workbook(filename)
+                    sheet = workbook.active
+                    startrow = sheet.max_row
+                    df.to_excel(writer, index=False, header=False, startrow=startrow)
+            else:
+                # If file doesn't exist, create it with headers
+                with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, header=True)
 
-    def perform_search(self, filename='random_search_results.xlsx'):
+        elif file_format == 'csv':
+            # Check if the file exists, append data if it does
+            if os.path.exists(filename):
+                df.to_csv(filename, mode='a', header=False, index=False)
+            else:
+                df.to_csv(filename, mode='w', header=True, index=False)
+
+    def perform_search(self, filename='random_search_results.xlsx', file_format='excel'):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.Y, test_size=self.test_size,
                                                             random_state=self.random_state)
 
@@ -96,7 +152,7 @@ class SklearnModelRandomSearch:
 
             search = RandomizedSearchCV(pipeline, param_distributions, n_iter=self.n_iter, cv=self.cv,
                                         scoring=make_scorer(f1_score, average='weighted'),
-                                        random_state=self.random_state, n_jobs=-1, return_train_score=True)
+                                        random_state=self.random_state, n_jobs=-1, return_train_score=True, verbose=1)
 
             search.fit(X_train, y_train)
 
@@ -118,8 +174,14 @@ class SklearnModelRandomSearch:
                     'f1_score': f1
                 })
 
-            # Save results of the current model to the Excel file incrementally
-            self._save_partial_results_to_excel(model_results, filename)
+            # Save results of the current model to the file in the specified format
+            self._save_partial_results(model_results, filename, file_format)
 
-    def run_search_and_save(self, filename='random_search_results.xlsx'):
-        self.perform_search(filename)
+    def run_search_and_save(self, filename='random_search_results', file_format='excel'):
+        # Determine file extension based on the chosen format
+        if 'xlsx' in file_format:
+            filename += '.xlsx'
+        elif 'csv' in file_format:
+            filename += '.csv'
+
+        self.perform_search(filename, file_format)

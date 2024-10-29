@@ -1,6 +1,4 @@
-from keras import Model
-from keras.applications import VGG16, ResNet50, InceptionV3, MobileNetV2, ResNet50V2
-
+import tensorflow as tf
 
 class KerasLoader:
     def __init__(self, model_name="ResNet50", input_shape=(224, 224, 3)):
@@ -8,11 +6,11 @@ class KerasLoader:
         self.input_shape = input_shape
         self.base_model = None
         self.model_dict = {
-            'VGG16': VGG16,
-            'ResNet50': ResNet50,
-            'InceptionV3': InceptionV3,
-            'MobileNetV2': MobileNetV2,
-            'ResNet50V2': ResNet50V2
+            'VGG16': tf.keras.applications.VGG16,
+            'ResNet50': tf.keras.applications.ResNet50,
+            'InceptionV3': tf.keras.applications.InceptionV3,
+            'MobileNetV2': tf.keras.applications.MobileNetV2,
+            'ResNet50V2': tf.keras.applications.ResNet50V2
         }
 
     def load_model(self, name):
@@ -38,7 +36,7 @@ class KerasLoader:
             raise ValueError(
                 f"Cannot remove {num_layers_to_remove} layers. The model has only {len(self.base_model.layers)} layers.")
         model = self.base_model.layers[len(self.base_model.layers) - num_layers_to_remove - 1].output
-        model_cut = Model(self.base_model.input, model)
+        model_cut = tf.keras.Model(self.base_model.input, model)
         return model_cut
 
     def load_freeze_and_modify_model(self, name, num_layers_to_remove=0):

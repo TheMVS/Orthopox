@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from keras.src.applications.convnext import preprocess_input
 
 
 class Loader:

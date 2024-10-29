@@ -1,8 +1,9 @@
 SEED = 42
 
-BASE_PATH = "./Data"
+BASE_PATH = "./data"
 DATA_SUMMARY_FILE = 'data_summary.txt'
-RANDOMSEARCH_FILE = 'random_search_results.xlsx'
+RANDOMSEARCH_FILE = 'random_search_results'
+RANDOMSEARCH_FORMAT = 'csv'
 RESULTS_FILE = 'evaluation_results.csv'
 STATS_FILE = 'custom_significance_results.csv'
 
@@ -13,6 +14,9 @@ PROB_FLIP_HORIZONTAL = 0.0
 PROB_FLIP_VERTICAL = 0.5
 PROB_BLUR = 0.5
 BLUR_SIZE = 5
+
+RESAMPLE_METHOD = "hybrid"
+RESAMPLE_TECHNIQUE = "smoteenn"
 
 NETWORK = "ResNet50"
 LAYERS = 3

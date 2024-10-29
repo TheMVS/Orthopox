@@ -6,13 +6,15 @@ from scipy.stats import ttest_rel
 
 
 class ModelEvaluator:
-    def __init__(self, model, X_original, Y_original, X_augmented, Y_augmented, validation_type='holdout',
+    def __init__(self, model, X_original, Y_original, X_augmented, Y_augmented, X_resampled, Y_resampled, validation_type='holdout',
                  test_size=0.2, random_state=42, n_splits=5, n_repeats=10):
         self.model = model
         self.X_original = X_original
         self.Y_original = Y_original
         self.X_augmented = X_augmented
         self.Y_augmented = Y_augmented
+        self.X_resampled = X_resampled
+        self.Y_resampled = Y_resampled
         self.validation_type = validation_type
         self.test_size = test_size
         self.random_state = random_state
@@ -114,9 +116,8 @@ class ModelEvaluator:
         else:
             raise ValueError("validation_type must be 'holdout', 'cross_validation' or 'leave_one_out'")
 
-    def _calculate_mean_std(self, results):
+    def _calculate_mean_std(self, results, metrics):
         # Calcula la media y desviación estándar de las métricas por clase
-        metrics = ['accuracy', 'precision', 'recall', 'f1_score', 'kappa']
         final_results = []
         for class_label, class_results in results.items():
             summary = {'class': class_label}
@@ -127,42 +128,72 @@ class ModelEvaluator:
             final_results.append(summary)
         return final_results
 
-    def _perform_significance_test(self, results_original, results_augmented, alpha=0.85):
+    def _perform_significance_test(self, results_original, results_augmented, results_res, metrics, alpha=0.85):
         for class_label in results_original.keys():
             for metric in metrics:
                 original_values = [result[metric] for result in results_original[class_label]]
                 augmented_values = [result[metric] for result in results_augmented[class_label]]
+                resampled_values = [result[metric] for result in results_res[class_label]]
 
-                t_stat, p_value = ttest_rel(original_values, augmented_values)
-
-                significant = 'Yes' if p_value < alpha else 'No'
+                t_stat_aug, p_value_aug = ttest_rel(original_values, augmented_values)
+                significant_aug = 'Yes' if p_value_aug < alpha else 'No'
 
                 self.significance_results.append({
+                    'comparison': 'original_vs_augmented',
                     'class': class_label,
                     'metric': metric,
-                    't_stat': t_stat,
-                    'p_value': p_value,
-                    'significant': significant
+                    't_stat': t_stat_aug,
+                    'p_value': p_value_aug,
+                    'significant': significant_aug
+                })
+
+                t_stat_res, p_value_res = ttest_rel(original_values, resampled_values)
+                significant_res = 'Yes' if p_value_res < alpha else 'No'
+
+                self.significance_results.append({
+                    'comparison': 'original_vs_resampled',
+                    'class': class_label,
+                    'metric': metric,
+                    't_stat': t_stat_res,
+                    'p_value': p_value_res,
+                    'significant': significant_res
+                })
+
+                t_stat_aug_res, p_value_aug_res = ttest_rel(augmented_values, resampled_values)
+                significant_aug_res = 'Yes' if p_value_aug_res < alpha else 'No'
+
+                self.significance_results.append({
+                    'comparison': 'augmented_vs_resampled',
+                    'class': class_label,
+                    'metric': metric,
+                    't_stat': t_stat_aug_res,
+                    'p_value': p_value_aug_res,
+                    'significant': significant_aug_res
                 })
 
     def save_results(self, results_filename='evaluation_results.csv', stats_filename='significance_test_results.csv',
                      alpha=0.85):
+        metrics = ['accuracy', 'precision', 'recall', 'f1_score', 'kappa']
         results_original = self.evaluate(self.X_original, self.Y_original)
         results_augmented = self.evaluate(self.X_augmented, self.Y_augmented)
+        results_resampled = self.evaluate(self.X_resampled, self.Y_resampled)
 
-        final_results_original = self._calculate_mean_std(results_original)
-        final_results_augmented = self._calculate_mean_std(results_augmented)
+        final_results_original = self._calculate_mean_std(results_original, metrics)
+        final_results_augmented = self._calculate_mean_std(results_augmented, metrics)
+        final_results_resampled = self._calculate_mean_std(results_resampled, metrics)
 
-        self._perform_significance_test(results_original, results_augmented, alpha)
+        self._perform_significance_test(results_original, results_augmented, results_resampled, metrics, alpha)
 
         df_original = pd.DataFrame(final_results_original)
         df_augmented = pd.DataFrame(final_results_augmented)
+        df_resampled = pd.DataFrame(final_results_resampled)
         df_significance = pd.DataFrame(self.significance_results)
 
         df_original['dataset'] = 'original'
         df_augmented['dataset'] = 'augmented'
+        df_resampled['dataset'] = 'resampled'
 
-        df_results = pd.concat([df_original, df_augmented])
+        df_results = pd.concat([df_original, df_augmented, df_resampled])
         df_results.to_csv(results_filename, index=False)
 
         df_significance.to_csv(stats_filename, index=False)
