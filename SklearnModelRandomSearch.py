@@ -53,7 +53,7 @@ class SklearnModelRandomSearch:
                 'clf__min_samples_leaf': randint(1, 10),  # Mayor rango para min_samples_leaf
                 'clf__class_weight': [None, 'balanced']  # Mantiene las opciones de class_weight
             },
-            'KNN': [
+            'KNN':
                 {
                     'clf__n_neighbors': [1],  # Caso fijo para k=1
                     'clf__weights': ['uniform', 'distance'],  # Mantiene las opciones de weights
@@ -61,14 +61,14 @@ class SklearnModelRandomSearch:
                     'clf__leaf_size': randint(10, 50),  # Añadido leaf_size
                     'clf__p': [1, 2]  # Distancia de Minkowski, p=1 (Manhattan) o p=2 (Euclidea)
                 },
+            'KNN':
                 {
                     'clf__n_neighbors': randint(2, 50),  # Rango aleatorio para n_neighbors
                     'clf__weights': ['uniform', 'distance'],  # Mantiene las opciones de weights
                     'clf__algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Mantiene las opciones de algorithm
                     'clf__leaf_size': randint(10, 50),  # Añadido leaf_size
                     'clf__p': [1, 2]  # Distancia de Minkowski, p=1 (Manhattan) o p=2 (Euclidea)
-                }
-            ],
+                },
             'AdaBoost': {
                 'clf__n_estimators': randint(50, 500),  # Variación en el número de estimadores
                 'clf__learning_rate': uniform(0.01, 1),  # Variación en learning rate

@@ -19,17 +19,17 @@ RESAMPLE_METHOD = "hybrid"
 RESAMPLE_TECHNIQUE = "smoteenn"
 
 NETWORK = "ResNet50"
-LAYERS = 3
+LAYERS = 0
 
 SKMODEL_NAME = 'LogisticRegression'
-SKMODEL_PARAMS = {'clf_solver': 'saga', 'clf_C': 10}
+SKMODEL_PARAMS = {'solver': 'saga', 'C': 10}
 
-RANDOM_SEARCH = True
+RANDOM_SEARCH = False
 RANDOM_SEARCH_ITERATIONS = 50
 
 VALIDATION_TYPE = 'cross_validation'
 # CV
-SPLITS = 10
+SPLITS = 5
 # HoldOut
 TEST_SIZE = 0.1
 REPEATS = 50

@@ -3,12 +3,13 @@ import numpy as np
 
 
 class Loader:
-    def __init__(self, base_path, size=(224, 224)):
+    def __init__(self, base_path, model, size=(224, 224)):
         self.base_path = base_path
         self.size = size
         self.X = []
         self.Y = []
         self.classes = {}
+        self.model = model
 
     def load_data(self):
         import os
@@ -65,7 +66,7 @@ class Loader:
 
         return np.array(X_aug), np.array(Y_aug), self.classes
 
-    def image_to_model_features(self, X, model):
-        predictions = model.predict(X)
+    def image_to_model_features(self, X):
+        predictions = self.model.predict(X)
         flat_predictions = predictions.reshape((predictions.shape[0], -1))
         return flat_predictions
