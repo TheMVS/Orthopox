@@ -4,15 +4,15 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold, LeaveOneOut
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score, confusion_matrix
 from scipy.stats import ttest_rel
-
+from SklearnLoader import SklearnLoader
 import Config
 from SampleBalancer import SampleBalancer
 
 
-class ModelEvaluator:
-    def __init__(self, model, X_original, Y_original, validation_type='holdout',
+class MultiModelEvaluator:
+    def __init__(self, models, X_original, Y_original, validation_type='holdout',
                  test_size=0.2, random_state=42, n_splits=5, n_repeats=10):
-        self.model = model
+        self.models = models
         self.X_original = X_original
         self.Y_original = Y_original
         self.validation_type = validation_type
@@ -102,6 +102,7 @@ class ModelEvaluator:
 
             self._save_fold_data(X_train, y_train, X_test, y_test, dataset, fold=None, repetition=counter)
 
+
             unique_classes = np.unique(Y)
             train_counts = np.bincount(y_train, minlength=len(unique_classes))
             test_counts = np.bincount(y_test, minlength=len(unique_classes))
@@ -113,33 +114,42 @@ class ModelEvaluator:
             print(f"Class distribution in test set of {dataset} dataset:\n")
             for cls, count in zip(unique_classes, test_counts):
                 print(f"Class {cls}: {count}")
-            '''
-            self.model.fit(X_train, y_train)
-            y_pred = self.model.predict(X_test)
-            classes = np.unique(Y)
-            acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(y_test, y_pred, classes)
 
-            for i, class_label in enumerate(classes):
-                results[class_label].append({
-                    'accuracy': acc[i],
-                    'precision': prec[i],
-                    'recall': rec[i],
-                    'f1_score': f1[i],
-                    'kappa': kappa
-                })
+            for model_name in self.models.keys():
+                skLoader = SklearnLoader(model_name=model_name, model_params=self.models[model_name])
+                model = skLoader.model
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                classes = np.unique(Y)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(y_test, y_pred, classes)
 
-            y_pred = self.model.predict(X_final_test)
-            classes = np.unique(Y)
-            acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred, classes)
-            for i, class_label in enumerate(classes):
-                final_results[class_label].append({
-                    'accuracy': acc[i],
-                    'precision': prec[i],
-                    'recall': rec[i],
-                    'f1_score': f1[i],
-                    'kappa': kappa
-                })
-'''
+                for i, class_label in enumerate(classes):
+                    results[class_label].append({
+                        'dataset': dataset,
+                        'model': model_name,
+                        'fold_repetition': f'repetition_{counter}',
+                        'accuracy': acc[i],
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
+
+                y_pred = model.predict(X_final_test)
+                classes = np.unique(Y)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred, classes)
+                for i, class_label in enumerate(classes):
+                    final_results[class_label].append({
+                        'dataset': 'final',
+                        'model': model_name,
+                        'fold_repetition': f'repetition_{counter}',
+                        'accuracy': acc[i],
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
+
         return results, final_results
 
     def _cross_validation(self, X, Y, X_final_test, Y_final_test, loader, dataset):
@@ -159,18 +169,6 @@ class ModelEvaluator:
             print(f"CV iteration {counter} of {dataset} dataset\n")
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = Y[train_index], Y[test_index]
-
-            unique_classes = np.unique(Y)
-            train_counts = np.bincount(y_train, minlength=len(unique_classes))
-            test_counts = np.bincount(y_test, minlength=len(unique_classes))
-
-            print(f"Original distribution in train set of {dataset} dataset:\n")
-            for cls, count in zip(unique_classes, train_counts):
-                print(f"Class {cls}: {count}")
-
-            print(f"Original distribution in test set of {dataset} dataset:\n")
-            for cls, count in zip(unique_classes, test_counts):
-                print(f"Class {cls}: {count}")
 
             if dataset == 'augmented':
                 X_aug, y_train, classes_aug = loader.data_augmentation(X_train, y_train,
@@ -203,31 +201,40 @@ class ModelEvaluator:
             for cls, count in zip(unique_classes, test_counts):
                 print(f"Class {cls}: {count}")
 
-            self.model.fit(X_train, y_train)
-            y_pred = self.model.predict(X_test)
-            classes = np.unique(Y)
-            acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(y_test, y_pred, classes)
-
-            for i, class_label in enumerate(classes):
-                results[class_label].append({
-                    'accuracy': acc[i],
-                    'precision': prec[i],
-                    'recall': rec[i],
-                    'f1_score': f1[i],
-                    'kappa': kappa
-                })
-
-            y_pred = self.model.predict(X_final_test)
-            classes = np.unique(Y)
-            acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred, classes)
-            for i, class_label in enumerate(classes):
-                final_results[class_label].append({
-                    'accuracy': acc[i],
-                    'precision': prec[i],
-                    'recall': rec[i],
-                    'f1_score': f1[i],
-                    'kappa': kappa
-                })
+            for model_name in self.models.keys():
+                skLoader = SklearnLoader(model_name=model_name, model_params=self.models[model_name])
+                model = skLoader.model
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                classes = np.unique(Y)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(y_test, y_pred, classes)
+    
+                for i, class_label in enumerate(classes):
+                    results[class_label].append({
+                        'dataset': dataset,
+                        'model': model_name,
+                        'fold_repetition': f'fold{counter}',
+                        'accuracy': acc[i],
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
+    
+                y_pred = model.predict(X_final_test)
+                classes = np.unique(Y)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred, classes)
+                for i, class_label in enumerate(classes):
+                    final_results[class_label].append({
+                        'dataset': 'final',
+                        'model': model_name,
+                        'fold_repetition': f'fold{counter}',
+                        'accuracy': acc[i],
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
 
         return results, final_results
 
@@ -238,8 +245,7 @@ class ModelEvaluator:
         test_data['label'] = Y_final_test
         test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
 
-        y_true_all = []
-        y_pred_all = []
+        results = {class_label: [] for class_label in np.unique(Y)}
         final_results = {class_label: [] for class_label in np.unique(Y)}
 
         loo = LeaveOneOut()
@@ -249,25 +255,6 @@ class ModelEvaluator:
             print(f"LOO iteration {counter} of {dataset} dataset\n")
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = Y[train_index], Y[test_index]
-
-            if dataset == 'augmented':
-                X_aug, y_train, classes_aug = loader.data_augmentation(X_train, y_train,
-                                                                       prob_flip_horizontal=Config.PROB_FLIP_HORIZONTAL,
-                                                                       prob_flip_vertical=Config.PROB_FLIP_VERTICAL,
-                                                                       prob_blur=Config.PROB_BLUR,
-                                                                       blur_size=Config.BLUR_SIZE)
-                X_train = loader.image_to_model_features(X_aug)
-            elif dataset == 'balanced':
-                balancer = SampleBalancer(random_state=Config.SEED)
-                X_train = loader.image_to_model_features(X_train)
-                X_res, y_train = balancer.balance(X_train, y_train, method=Config.RESAMPLE_METHOD,
-                                                  technique=Config.RESAMPLE_TECHNIQUE)
-            else:
-                X_train = loader.image_to_model_features(X_train)
-
-            X_test = loader.image_to_model_features(X_test)
-
-            self._save_fold_data(X_train, y_train, X_test, y_test, dataset, fold=counter)
 
             unique_classes = np.unique(Y)
             train_counts = np.bincount(y_train, minlength=len(unique_classes))
@@ -281,36 +268,45 @@ class ModelEvaluator:
             for cls, count in zip(unique_classes, test_counts):
                 print(f"Class {cls}: {count}")
 
-            self.model.fit(X_train, y_train)
-            y_pred = self.model.predict(X_test)
+            for model_name in self.models.keys():
+                skLoader = SklearnLoader(model_name=model_name, model_params=self.models[model_name])
+                model = skLoader.model
+                model.fit(X_train, y_train)
 
-            y_true_all.append(y_test[0])
-            y_pred_all.append(y_pred[0])
+                # Predictions for LOO fold
+                y_pred = model.predict(X_test)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(y_test, y_pred, unique_classes)
 
-            y_pred = self.model.predict(X_final_test)
-            classes = np.unique(Y)
-            acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred, classes)
-            for i, class_label in enumerate(classes):
-                final_results[class_label].append({
-                    'accuracy': acc[i],
-                    'precision': prec[i],
-                    'recall': rec[i],
-                    'f1_score': f1[i],
-                    'kappa': kappa
-                })
+                for i, class_label in enumerate(unique_classes):
+                    results[class_label].append({
+                        'dataset': dataset,
+                        'model': model_name,
+                        'fold_repetition': f'loo{counter}',
+                        'class': class_label,
+                        'accuracy': acc,
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
 
-        classes = np.unique(Y)
-        acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(np.array(y_true_all), np.array(y_pred_all),
-                                                                            classes)
+                # Final test predictions
+                y_pred_final = model.predict(X_final_test)
+                acc, prec, rec, f1, kappa, tn, fp, fn, tp = self._calculate_metrics(Y_final_test, y_pred_final,
+                                                                                    unique_classes)
 
-        results = {class_label: [{
-            'accuracy': acc[i],
-            'precision': prec[i],
-            'recall': rec[i],
-            'f1_score': f1[i],
-            'kappa': kappa
-        }] for i, class_label in enumerate(classes)}
-
+                for i, class_label in enumerate(unique_classes):
+                    final_results[class_label].append({
+                        'dataset': 'final',
+                        'model': model_name,
+                        'fold_repetition': f'loo{counter}',
+                        'class': class_label,
+                        'accuracy': acc,
+                        'precision': prec[i],
+                        'recall': rec[i],
+                        'f1_score': f1[i],
+                        'kappa': kappa
+                    })
 
         return results, final_results
 
@@ -391,7 +387,7 @@ class ModelEvaluator:
         results_original, final_original = self.evaluate(X, Y, X_test, Y_test, loader, 'original')
         results_augmented, final_augmented = self.evaluate(X, Y, X_test, Y_test, loader, 'augmented')
         results_resampled, final_resampled = self.evaluate(X, Y, X_test, Y_test, loader, 'balanced')
-
+        '''
         total_results_original = self._calculate_mean_std(results_original, metrics)
         total_results_augmented = self._calculate_mean_std(results_augmented, metrics)
         total_results_resampled = self._calculate_mean_std(results_resampled, metrics)
@@ -406,7 +402,7 @@ class ModelEvaluator:
         df_original['dataset'] = 'original'
         df_augmented['dataset'] = 'augmented'
         df_resampled['dataset'] = 'resampled'
-
+        
         df_results = pd.concat([df_original, df_augmented, df_resampled])
         df_results.to_csv(results_filename, index=False)
 
@@ -426,7 +422,23 @@ class ModelEvaluator:
         df_resampled['dataset'] = 'resampled'
 
         df_results = pd.concat([df_original, df_augmented, df_resampled])
+        
         df_results.to_csv('final_'+ results_filename, index=False)
 
         self._perform_significance_test(results_original, results_augmented, results_resampled, metrics, alpha)
         df_significance.to_csv('final_'+ stats_filename, index=False)
+        '''
+        df_original = pd.DataFrame(results_original)
+        df_augmented = pd.DataFrame(results_augmented)
+        df_resampled = pd.DataFrame(results_resampled)
+
+        df_results = pd.concat([df_original, df_augmented, df_resampled])
+        df_results.to_csv(results_filename, index=False)
+
+        df_original = pd.DataFrame(final_original)
+        df_augmented = pd.DataFrame(final_augmented)
+        df_resampled = pd.DataFrame(final_resampled)
+
+        df_results = pd.concat([df_original, df_augmented, df_resampled])
+        df_results.to_csv('final_'+ results_filename, index=False)
+

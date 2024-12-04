@@ -1,4 +1,4 @@
-from imblearn.under_sampling import RandomUnderSampler, NearMiss, ClusterCentroids
+from imblearn.under_sampling import RandomUnderSampler, NearMiss, ClusterCentroids, EditedNearestNeighbours, TomekLinks
 from imblearn.over_sampling import RandomOverSampler, SMOTE, ADASYN
 from imblearn.combine import SMOTEENN, SMOTETomek
 
@@ -7,20 +7,20 @@ class SampleBalancer:
         self.random_state = random_state
 
         self.undersampling_methods = {
-            "random": RandomUnderSampler(random_state=self.random_state),
-            "nearmiss": NearMiss(),
-            "cluster_centroids": ClusterCentroids(random_state=self.random_state)
+            "random": RandomUnderSampler(sampling_strategy='not majority', random_state=self.random_state),
+            "nearmiss": NearMiss(sampling_strategy='not majority'),
+            "cluster_centroids": ClusterCentroids(sampling_strategy='not majority', random_state=self.random_state)
         }
 
         self.oversampling_methods = {
-            "random": RandomOverSampler(random_state=self.random_state),
-            "smote": SMOTE(random_state=self.random_state),
-            "adasyn": ADASYN(random_state=self.random_state)
+            "random": RandomOverSampler(sampling_strategy='not majority', random_state=self.random_state),
+            "smote": SMOTE(sampling_strategy='not majority', random_state=self.random_state),
+            "adasyn": ADASYN(sampling_strategy='not majority', random_state=self.random_state)
         }
 
         self.hybrid_methods = {
-            "smoteenn": SMOTEENN(random_state=self.random_state),
-            "smotetomek": SMOTETomek(random_state=self.random_state)
+            "smoteenn": SMOTEENN(enn=EditedNearestNeighbours(sampling_strategy='majority'), sampling_strategy='not majority', random_state=self.random_state),
+            "smotetomek": SMOTETomek(tomek=TomekLinks(sampling_strategy='majority'),sampling_strategy='not majority', random_state=self.random_state)
         }
 
     def balance(self, X, y, method="undersample", technique="random"):
