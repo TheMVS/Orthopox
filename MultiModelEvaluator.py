@@ -63,8 +63,7 @@ class MultiModelEvaluator:
             tn[i] = np.sum(cm) - (tp[i] + fn[i] + fp[i])
 
             # Accuracy por clase: (TP) / Total para la clase
-            total_class_samples = tp[i] + fn[i]
-            acc_per_class.append(tp[i] / total_class_samples if total_class_samples > 0 else 0)
+            acc_per_class.append(tp[i] + fn[i]/ tp[i] + fn[i] + fp[i] + tn[i])
 
         return acc_per_class, prec, rec, f1, kappa, tn, fp, fn, tp
 
@@ -428,17 +427,27 @@ class MultiModelEvaluator:
         self._perform_significance_test(results_original, results_augmented, results_resampled, metrics, alpha)
         df_significance.to_csv('final_'+ stats_filename, index=False)
         '''
-        df_original = pd.DataFrame(results_original)
-        df_augmented = pd.DataFrame(results_augmented)
-        df_resampled = pd.DataFrame(results_resampled)
+        all_results = []
+        for dataset_results in [results_original, results_augmented, results_resampled]:
+            for class_label, records in dataset_results.items():
+                for record in records:
+                    structured_record = {'class': class_label, **record}
+                    all_results.append(structured_record)
 
-        df_results = pd.concat([df_original, df_augmented, df_resampled])
+        # Guardar el archivo CSV con la clase como la primera columna
+        df_results = pd.DataFrame(all_results)
+        df_results = df_results.sort_values(by=['class'])
         df_results.to_csv(results_filename, index=False)
 
-        df_original = pd.DataFrame(final_original)
-        df_augmented = pd.DataFrame(final_augmented)
-        df_resampled = pd.DataFrame(final_resampled)
+        # Procesar resultados finales
+        all_final_results = []
+        for final_dataset_results in [final_original, final_augmented, final_resampled]:
+            for class_label, records in final_dataset_results.items():
+                for record in records:
+                    structured_record = {'class': class_label, **record}
+                    all_final_results.append(structured_record)
 
-        df_results = pd.concat([df_original, df_augmented, df_resampled])
-        df_results.to_csv('final_'+ results_filename, index=False)
+        df_final_results = pd.DataFrame(all_final_results)
+        df_final_results = df_final_results.sort_values(by=['class'])
+        df_final_results.to_csv('final_' + results_filename, index=False)
 

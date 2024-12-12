@@ -41,7 +41,7 @@ def main():
                                        validation_type=Config.VALIDATION_TYPE,
                                        test_size=Config.TEST_SIZE, random_state=Config.SEED, n_splits=Config.SPLITS,
                                        n_repeats=Config.REPEATS)
-            evaluator.save_results(loader, results_filename=Config.RESULTS_FILE, stats_filename=Config.STATS_FILE)
+            evaluator.save_results(loader, results_filename=Config.RESULTS_FILE)
 
 if __name__ == "__main__":
     main()
