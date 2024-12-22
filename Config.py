@@ -35,6 +35,7 @@ TEST_SIZE = 0.1
 REPEATS = 50
 
 MULTIPLECOMPARISON = True
+
 MODELS = {
         "AdaBoost": {'algorithm': 'SAMME', 'learning_rate': 0.6332981268275579, 'n_estimators': 467},
         "DecisionTree": {'class_weight': None, 'criterion': 'gini', 'max_depth': 46, 'min_samples_leaf': 8, 'min_samples_split': 16, 'splitter': 'best'},
@@ -47,3 +48,8 @@ MODELS = {
         "RandomForest": {'bootstrap': False, 'class_weight': 'balanced', 'max_depth': 25, 'max_features': 'auto', 'min_samples_leaf': 6, 'min_samples_split': 13, 'n_estimators': 394},
         "SVM": {'C': 5.983876860868068, 'class_weight': 'balanced', 'degree': 2, 'gamma': 'auto', 'kernel': 'sigmoid'}
     }
+
+ATRIBUTE_REDUCTION = 'pca'
+PCA_COMPONENTS = 1000
+
+BATCH_NORMALIZATION = True

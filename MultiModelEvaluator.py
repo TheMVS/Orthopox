@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
+from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split, StratifiedKFold, LeaveOneOut
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score, confusion_matrix
 from scipy.stats import ttest_rel
@@ -67,16 +68,19 @@ class MultiModelEvaluator:
 
         return acc_per_class, prec, rec, f1, kappa, tn, fp, fn, tp
 
+    def _apply_pca(self, X_train, X_test, X_final_test):
+        pca = PCA(n_components=Config.PCA_COMPONENTS, random_state=Config.SEED)
+        X_train_pca = pca.fit_transform(X_train)
+        X_test_pca = pca.transform(X_test)
+        X_final_test_pca = pca.transform(X_final_test)
+        return X_train_pca, X_test_pca, X_final_test_pca
+
     def _holdout_validation(self, X, Y, X_final_test, Y_final_test, loader, dataset):
-        test_data_folder = "final_test_data"
-        os.makedirs(test_data_folder, exist_ok=True)
-        test_data = pd.DataFrame(X_final_test)
-        test_data['label'] = Y_final_test
-        test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
 
         results = {class_label: [] for class_label in np.unique(Y)}
         final_results = {class_label: [] for class_label in np.unique(Y)}
 
+        original_X_final_test = X_final_test
         for counter in range(self.n_repeats):
             print(f"CV iteration {counter + 1} of {dataset} dataset\n")
             X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=self.test_size,
@@ -98,6 +102,15 @@ class MultiModelEvaluator:
                 X_train = loader.image_to_model_features(X_train)
 
             X_test = loader.image_to_model_features(X_test)
+
+            if Config.ATRIBUTE_REDUCTION == 'pca':
+                X_train, X_test, X_final_test = self._apply_pca(X_train, X_test, original_X_final_test)
+
+            test_data_folder = "final_test_data"
+            os.makedirs(test_data_folder, exist_ok=True)
+            test_data = pd.DataFrame(X_final_test)
+            test_data['label'] = Y_final_test
+            test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
 
             self._save_fold_data(X_train, y_train, X_test, y_test, dataset, fold=None, repetition=counter)
 
@@ -152,15 +165,10 @@ class MultiModelEvaluator:
         return results, final_results
 
     def _cross_validation(self, X, Y, X_final_test, Y_final_test, loader, dataset):
-        test_data_folder = "final_test_data"
-        os.makedirs(test_data_folder, exist_ok=True)
-        test_data = pd.DataFrame(X_final_test)
-        test_data['label'] = Y_final_test
-        test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
-
         results = {class_label: [] for class_label in np.unique(Y)}
         final_results = {class_label: [] for class_label in np.unique(Y)}
 
+        original_X_final_test = X_final_test
         skf = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
         counter = 0
         for train_index, test_index in skf.split(X, Y):
@@ -185,6 +193,15 @@ class MultiModelEvaluator:
                 X_train = loader.image_to_model_features(X_train)
 
             X_test = loader.image_to_model_features(X_test)
+
+            if Config.ATRIBUTE_REDUCTION == 'pca':
+                X_train, X_test, X_final_test = self._apply_pca(X_train, X_test, original_X_final_test)
+
+            test_data_folder = "final_test_data"
+            os.makedirs(test_data_folder, exist_ok=True)
+            test_data = pd.DataFrame(X_final_test)
+            test_data['label'] = Y_final_test
+            test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
 
             self._save_fold_data(X_train, y_train, X_test, y_test, dataset, fold=counter)
 
@@ -238,22 +255,26 @@ class MultiModelEvaluator:
         return results, final_results
 
     def _leave_one_out(self, X, Y, X_final_test, Y_final_test, loader, dataset):
-        test_data_folder = "final_test_data"
-        os.makedirs(test_data_folder, exist_ok=True)
-        test_data = pd.DataFrame(X_final_test)
-        test_data['label'] = Y_final_test
-        test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
-
         results = {class_label: [] for class_label in np.unique(Y)}
         final_results = {class_label: [] for class_label in np.unique(Y)}
 
         loo = LeaveOneOut()
         counter = 0
+        original_X_final_test = X_final_test
         for train_index, test_index in loo.split(X):
             counter += 1
             print(f"LOO iteration {counter} of {dataset} dataset\n")
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = Y[train_index], Y[test_index]
+
+            if Config.ATRIBUTE_REDUCTION == 'pca':
+                X_train, X_test, X_final_test = self._apply_pca(X_train, X_test, original_X_final_test)
+
+            test_data_folder = "final_test_data"
+            os.makedirs(test_data_folder, exist_ok=True)
+            test_data = pd.DataFrame(X_final_test)
+            test_data['label'] = Y_final_test
+            test_data.to_csv(os.path.join(test_data_folder, 'final.csv'), index=False)
 
             unique_classes = np.unique(Y)
             train_counts = np.bincount(y_train, minlength=len(unique_classes))
@@ -386,47 +407,7 @@ class MultiModelEvaluator:
         results_original, final_original = self.evaluate(X, Y, X_test, Y_test, loader, 'original')
         results_augmented, final_augmented = self.evaluate(X, Y, X_test, Y_test, loader, 'augmented')
         results_resampled, final_resampled = self.evaluate(X, Y, X_test, Y_test, loader, 'balanced')
-        '''
-        total_results_original = self._calculate_mean_std(results_original, metrics)
-        total_results_augmented = self._calculate_mean_std(results_augmented, metrics)
-        total_results_resampled = self._calculate_mean_std(results_resampled, metrics)
 
-        self._perform_significance_test(results_original, results_augmented, results_resampled, metrics, alpha)
-
-        df_original = pd.DataFrame(total_results_original)
-        df_augmented = pd.DataFrame(total_results_augmented)
-        df_resampled = pd.DataFrame(total_results_resampled)
-        df_significance = pd.DataFrame(self.significance_results)
-
-        df_original['dataset'] = 'original'
-        df_augmented['dataset'] = 'augmented'
-        df_resampled['dataset'] = 'resampled'
-        
-        df_results = pd.concat([df_original, df_augmented, df_resampled])
-        df_results.to_csv(results_filename, index=False)
-
-        df_significance.to_csv(stats_filename, index=False)
-
-        total_final_original = self._calculate_mean_std(final_original, metrics)
-        total_final_augmented = self._calculate_mean_std(final_augmented, metrics)
-        total_final_resampled = self._calculate_mean_std(final_resampled, metrics)
-
-        df_original = pd.DataFrame(total_final_original)
-        df_augmented = pd.DataFrame(total_final_augmented)
-        df_resampled = pd.DataFrame(total_final_resampled)
-        df_significance = pd.DataFrame(self.significance_results)
-
-        df_original['dataset'] = 'original'
-        df_augmented['dataset'] = 'augmented'
-        df_resampled['dataset'] = 'resampled'
-
-        df_results = pd.concat([df_original, df_augmented, df_resampled])
-        
-        df_results.to_csv('final_'+ results_filename, index=False)
-
-        self._perform_significance_test(results_original, results_augmented, results_resampled, metrics, alpha)
-        df_significance.to_csv('final_'+ stats_filename, index=False)
-        '''
         all_results = []
         for dataset_results in [results_original, results_augmented, results_resampled]:
             for class_label, records in dataset_results.items():

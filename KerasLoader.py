@@ -1,5 +1,8 @@
 import tensorflow as tf
 
+import Config
+
+
 class KerasLoader:
     def __init__(self, model_name="ResNet50", input_shape=(224, 224, 3)):
         self.model_name = model_name
@@ -36,6 +39,10 @@ class KerasLoader:
             raise ValueError(
                 f"Cannot remove {num_layers_to_remove} layers. The model has only {len(self.base_model.layers)} layers.")
         model = self.base_model.layers[len(self.base_model.layers) - num_layers_to_remove - 1].output
+
+        if Config.BATCH_NORMALIZATION:
+            model = tf.keras.layers.BatchNormalization()(model)
+
         model_cut = tf.keras.Model(self.base_model.input, model)
         return model_cut
 
