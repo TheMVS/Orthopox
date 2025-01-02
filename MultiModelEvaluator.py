@@ -64,7 +64,7 @@ class MultiModelEvaluator:
             tn[i] = np.sum(cm) - (tp[i] + fn[i] + fp[i])
 
             # Accuracy por clase: (TP) / Total para la clase
-            acc_per_class.append(tp[i] + fn[i]/ tp[i] + fn[i] + fp[i] + tn[i])
+            acc_per_class.append((tp[i] + fn[i])/ (tp[i] + fn[i] + fp[i] + tn[i]))
 
         return acc_per_class, prec, rec, f1, kappa, tn, fp, fn, tp
 
