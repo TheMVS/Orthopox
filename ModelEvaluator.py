@@ -63,8 +63,7 @@ class ModelEvaluator:
             tn[i] = np.sum(cm) - (tp[i] + fn[i] + fp[i])
 
             # Accuracy por clase: (TP) / Total para la clase
-            total_class_samples = tp[i] + fn[i]
-            acc_per_class.append(tp[i] / total_class_samples if total_class_samples > 0 else 0)
+            acc_per_class.append((tp[i] + fn[i])/ (tp[i] + fn[i] + fp[i] + tn[i]))
 
         return acc_per_class, prec, rec, f1, kappa, tn, fp, fn, tp
 
