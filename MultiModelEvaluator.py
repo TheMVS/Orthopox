@@ -63,8 +63,7 @@ class MultiModelEvaluator:
             fp[i] = np.sum(cm[:, i]) - tp[i]
             tn[i] = np.sum(cm) - (tp[i] + fn[i] + fp[i])
 
-            # Accuracy por clase: (TP) / Total para la clase
-            acc_per_class.append((tp[i] + fn[i])/ (tp[i] + fn[i] + fp[i] + tn[i]))
+            acc_per_class.append((tp[i] + tn[i]) / (tp[i] + fn[i] + fp[i] + tn[i]))
 
         return acc_per_class, prec, rec, f1, kappa, tn, fp, fn, tp
 
@@ -153,6 +152,7 @@ class MultiModelEvaluator:
                 for i, class_label in enumerate(classes):
                     final_results[class_label].append({
                         'dataset': 'final',
+                        'train_dataset': dataset,
                         'model': model_name,
                         'fold_repetition': f'repetition_{counter}',
                         'accuracy': acc[i],
@@ -243,6 +243,7 @@ class MultiModelEvaluator:
                 for i, class_label in enumerate(classes):
                     final_results[class_label].append({
                         'dataset': 'final',
+                        'train_dataset': dataset,
                         'model': model_name,
                         'fold_repetition': f'fold{counter}',
                         'accuracy': acc[i],
@@ -318,6 +319,7 @@ class MultiModelEvaluator:
                 for i, class_label in enumerate(unique_classes):
                     final_results[class_label].append({
                         'dataset': 'final',
+                        'train_dataset': dataset,
                         'model': model_name,
                         'fold_repetition': f'loo{counter}',
                         'class': class_label,
